@@ -1,5 +1,9 @@
 package com.example.bdget.service;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -41,5 +45,28 @@ public class CompraServiceImpl implements CompraService {
         response.setPrecioUnitario(precioUnitario);
         response.setTotal(total);
         return response;
+    }
+
+    @Override
+    public File generarResumen(Long compraId) {
+    Compra compra = compraRepository.findById(compraId)
+            .orElseThrow(() -> new RuntimeException(
+                    "No existe la compra con id " + compraId));
+    Evento evento = eventoRepository.findById(compra.getEventoId())                
+        .orElseThrow(() -> new RuntimeException(
+            "Id del evento no encontrado: " + compra.getEventoId()));
+    String contenido = "Resumen de Compra N° " + compra.getId() + "\n"
+        + "Evento: " + evento.getNombre() + "\n"
+        + "Cantidad de entradas: " + compra.getCantidad() + "\n"
+        + "Precio unitario: " + compra.getPrecioUnitario() + "\n"
+        + "Total: " + compra.getTotal() + "\n";
+
+    File archivo = new File("resumen_" + compra.getId() + ".txt");
+    try {
+        Files.writeString(archivo.toPath(), contenido);
+    } catch (IOException e) {
+        throw new RuntimeException("No se pudo crear el archivo del resumen", e);
+    }
+    return archivo;
     }
 }
