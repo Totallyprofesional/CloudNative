@@ -4,5 +4,6 @@ import com.example.bdget.dto.TicketRequest;
 import com.example.bdget.dto.TicketResponse;
 
 public interface TicketService {
-    TicketResponse generarTicket(TicketRequest request);        
+    TicketResponse generarTicket(TicketRequest request);    
+    String subirTicket(Long ticketId);    
 }

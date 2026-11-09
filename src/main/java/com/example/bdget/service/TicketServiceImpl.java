@@ -1,5 +1,6 @@
 package com.example.bdget.service;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,6 +28,12 @@ public class TicketServiceImpl implements TicketService {
     @Value("${efs.path}")
     private String efsPath;
 
+    @Value("${aws.s3.bucket}")
+    private String bucket;
+
+    @Autowired
+    private AwsService awsService;
+
     @Override
     public TicketResponse generarTicket(TicketRequest request) {
         Evento evento = eventoRepository.findById(request.getEventoId())
@@ -45,18 +52,18 @@ public class TicketServiceImpl implements TicketService {
         ticketRepository.save(ticket);
 
         String contenido = "Ticket N° " + ticket.getId() + "\n"
-        + "Evento: " + evento.getNombre() + "\n"
-        + "Usuario: " + ticket.getUsuario() + "\n"
-        + "Cantidad de entradas: " + ticket.getCantidad() + "\n"
-        + "Precio unitario: " + ticket.getPrecioUnitario() + "\n"
-        + "Total: " + ticket.getTotal() + "\n";
+                + "Evento: " + evento.getNombre() + "\n"
+                + "Usuario: " + ticket.getUsuario() + "\n"
+                + "Cantidad de entradas: " + ticket.getCantidad() + "\n"
+                + "Precio unitario: " + ticket.getPrecioUnitario() + "\n"
+                + "Total: " + ticket.getTotal() + "\n";
 
         try {
-        Path carpeta = Paths.get(efsPath, "evento" + evento.getId(), ticket.getUsuario());
-        Files.createDirectories(carpeta);
-        Files.writeString(carpeta.resolve("ticket" + ticket.getId() + ".txt"), contenido);
+            Path carpeta = Paths.get(efsPath, "evento" + evento.getId(), ticket.getUsuario());
+            Files.createDirectories(carpeta);
+            Files.writeString(carpeta.resolve("ticket" + ticket.getId() + ".txt"), contenido);
         } catch (IOException e) {
-        throw new RuntimeException("No se pudo guardar el ticket en el EFS", e);
+            throw new RuntimeException("No se pudo guardar el ticket en el EFS", e);
         }
 
         TicketResponse response = new TicketResponse();
@@ -67,5 +74,16 @@ public class TicketServiceImpl implements TicketService {
         response.setPrecioUnitario(precioUnitario);
         response.setTotal(total);
         return response;
+    }
+
+    @Override
+    public String subirTicket(Long ticketId) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException(
+                        "No existe el ticket con id " + ticketId));
+        File archivo = Paths.get(efsPath, "evento" + ticket.getEventoId(),
+                ticket.getUsuario(), "ticket" + ticket.getId() + ".txt").toFile();
+        return awsService.uploadFile(bucket,
+                "evento" + ticket.getEventoId() + "/" + ticket.getUsuario() + "/", archivo);
     }
 }
