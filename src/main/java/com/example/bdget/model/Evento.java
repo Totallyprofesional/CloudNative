@@ -12,8 +12,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-@Entity 
-@Table(name = "evento") 
+@Entity
+@Table(name = "evento")
 public class Evento {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -60,7 +60,5 @@ public class Evento {
 
     public void setPrecioEntrada(Integer precioEntrada) {
         this.precioEntrada = precioEntrada;
-    }  
+    }
 }
-
-    

@@ -31,7 +31,7 @@ public class S3RepositoryImpl implements S3Repository {
     private static final Logger log = LoggerFactory.getLogger(S3RepositoryImpl.class);
 
     @Override
-    public List<Asset> listObjectsInBucket(String bucket) {
+    public List<Asset> listObjectsInBucket(String bucket) throws IOException {
         List<Asset> items = amazonS3.listObjectsV2(bucket).getObjectSummaries().stream()
                 .parallel()
                 .map(S3ObjectSummary::getKey)
@@ -60,16 +60,10 @@ public class S3RepositoryImpl implements S3Repository {
     }
 
     @Override
-    public byte[] downloadFile(String bucketName, String fileName) {
+    public byte[] downloadFile(String bucketName, String fileName) throws IOException {
         S3Object s3Object = amazonS3.getObject(bucketName, fileName);
         S3ObjectInputStream inputStream = s3Object.getObjectContent();
-        try {
-            byte[] content = IOUtils.toByteArray(inputStream);
-            return content;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return IOUtils.toByteArray(inputStream);
     }
 
     @Override

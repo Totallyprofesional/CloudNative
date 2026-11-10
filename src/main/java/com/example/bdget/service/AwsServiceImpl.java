@@ -28,10 +28,12 @@ public class AwsServiceImpl implements AwsService {
         this.s3Repository = s3Repository;
     }
 
-    public List<Asset> getS3Files(String bucket) {
+    @Override
+    public List<Asset> getS3Files(String bucket) throws IOException {
         return s3Repository.listObjectsInBucket(bucket);
     }
 
+    @Override
     public String getS3FileContent(String bucketName, String fileName) throws IOException {
         return getAsString(s3Repository.getObject(bucketName, fileName));
     }
@@ -39,53 +41,53 @@ public class AwsServiceImpl implements AwsService {
     private static String getAsString(InputStream is) throws IOException {
         if (is == null)
             return "";
-    BufferedReader reader = new BufferedReader(new InputStreamReader(is, StringUtils.UTF8));
-    StringBuilder sb = new StringBuilder();
-    String line; 
-    try{
-        while ((line = reader.readLine()) != null) {
-            sb.append(line).append("\n");
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is, StringUtils.UTF8));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        try {
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+        } finally {
+            is.close();
         }
-    } finally {
-        is.close();
-    }
-    return sb.toString();
+        return sb.toString();
     }
 
-    @Override 
+    @Override
     public byte[] downloadFile(String bucketName, String fileName) throws IOException {
         return s3Repository.downloadFile(bucketName, fileName);
     }
-    
+
     @Override
     public void moveObject(String bucketName, String fileKey, String destinationFileKey) {
         s3Repository.moveObject(bucketName, fileKey, destinationFileKey);
-    } 
+    }
 
-    @Override 
-    public void deleteObject(String bucketName, String fileKey){
+    @Override
+    public void deleteObject(String bucketName, String fileKey) {
         s3Repository.deleteObject(bucketName, fileKey);
     }
 
-    @Override 
-    public String uploadFile(String bucketName, String filePath, MultipartFile file){
+    @Override
+    public String uploadFile(String bucketName, String filePath, MultipartFile file) {
         File fileObj = convertMultiPartFiletoFile(file);
         String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
         return s3Repository.uploadFile(bucketName, filePath + fileName, fileObj);
     }
 
-   @Override
+    @Override
     public String uploadFile(String bucketName, String carpeta, File archivo) {
-       return s3Repository.uploadFile(bucketName, carpeta + archivo.getName(), archivo);
+        return s3Repository.uploadFile(bucketName, carpeta + archivo.getName(), archivo);
     }
 
-    private File convertMultiPartFiletoFile(MultipartFile file){
+    private File convertMultiPartFiletoFile(MultipartFile file) {
         File convertFile = new File(file.getOriginalFilename());
-        try (FileOutputStream fos = new FileOutputStream(convertFile)){
-            fos.write(file.getBytes());          
+        try (FileOutputStream fos = new FileOutputStream(convertFile)) {
+            fos.write(file.getBytes());
         } catch (IOException e) {
             log.error("Error converting multipartFile to file", e);
-        } 
+        }
         return convertFile;
     }
 }

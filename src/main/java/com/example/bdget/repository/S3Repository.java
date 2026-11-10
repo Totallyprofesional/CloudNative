@@ -8,11 +8,11 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.example.bdget.model.Asset;
 
 public interface S3Repository {
-    List<Asset> listObjectsInBucket(String bucket);
+    List<Asset> listObjectsInBucket(String bucket) throws IOException;
 
     S3ObjectInputStream getObject(String bucketName, String fileName) throws IOException;
 
-    byte[] downloadFile(String bucketName, String fileName);
+    byte[] downloadFile(String bucketName, String fileName) throws IOException;
 
     void moveObject(String bucketName, String fileName, String destinationFileKey);
 
