@@ -2,7 +2,9 @@ package com.example.bdget.controller;
 
 import java.util.List;
 
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,6 +45,16 @@ public class TicketController {
         return ticketService.subirTicket(id);
     }
 
+    @GetMapping("/{id}/descargar")
+    public ResponseEntity<ByteArrayResource> descargarTicket(@PathVariable Long id) {
+        byte[] data = ticketService.descargarTicket(id);
+        return ResponseEntity.ok()
+                .contentLength(data.length)
+                .header("Content-Type", "application/octet-stream")
+                .header("Content-Disposition", "attachment; filename=\"ticket" + id + ".txt\"")
+                .body(new ByteArrayResource(data));
+    }
+
     @GetMapping("/evento/{eventoId}")
     public List<Asset> ticketsPorEvento(@PathVariable Long eventoId) {
         return ticketService.ticketsPorEvento(eventoId);
@@ -55,7 +67,7 @@ public class TicketController {
 
     @PutMapping("/{id}")
     public TicketResponse actualizarTicket(@PathVariable Long id,
-                                           @Valid @RequestBody TicketUpdateRequest request) {
+            @Valid @RequestBody TicketUpdateRequest request) {
         return ticketService.actualizarTicket(id, request);
     }
 

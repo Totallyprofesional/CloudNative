@@ -80,6 +80,11 @@ public class TicketServiceImpl implements TicketService {
                 .orElseThrow(() -> new RuntimeException(
                         "No existe el ticket con id " + ticketId));
         File archivo = rutaTicket(ticket).toFile();
+
+        if (!archivo.exists()) {
+            throw new RuntimeException("El ticket " + ticketId
+                    + " ya fue subido a S3 o no existe en el EFS");
+        }
         return awsService.uploadFile(bucket,
                 "evento" + ticket.getEventoId() + "/" + ticket.getUsuario() + "/", archivo);
     }
@@ -117,7 +122,6 @@ public class TicketServiceImpl implements TicketService {
                 .orElseThrow(() -> new RuntimeException(
                         "No existe el evento con id " + ticket.getEventoId()));
 
-        ticket.setUsuario(request.getUsuario());
         ticket.setCantidad(request.getCantidad());
         ticket.setTotal(ticket.getPrecioUnitario() * request.getCantidad());
         ticketRepository.save(ticket);
@@ -136,6 +140,10 @@ public class TicketServiceImpl implements TicketService {
         } catch (IOException e) {
             throw new RuntimeException("No se pudo actualizar el ticket en el EFS", e);
         }
+
+        awsService.uploadFile(bucket,
+                "evento" + ticket.getEventoId() + "/" + ticket.getUsuario() + "/",
+                rutaTicket(ticket).toFile());
 
         return toResponse(ticket, evento.getNombre());
     }
@@ -157,6 +165,22 @@ public class TicketServiceImpl implements TicketService {
         awsService.deleteObject(bucket, key);
 
         ticketRepository.delete(ticket);
+    }
+
+    @Override
+    public byte[] descargarTicket(Long ticketId) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException(
+                        "No existe el ticket con id " + ticketId));
+
+        String key = "evento" + ticket.getEventoId() + "/" + ticket.getUsuario()
+                + "/ticket" + ticket.getId() + ".txt";
+
+        try {
+            return awsService.downloadFile(bucket, key);
+        } catch (IOException e) {
+            throw new RuntimeException("No se pudo descargar el ticket " + ticketId, e);
+        }
     }
 
     @Override

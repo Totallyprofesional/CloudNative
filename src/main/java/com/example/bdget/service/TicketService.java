@@ -23,4 +23,7 @@ public interface TicketService {
     void eliminarTicket(Long ticketId);
 
     EstadisticasResponse estadisticasPorEvento(Long eventoId);
+
+    byte[] descargarTicket(Long ticketId);
+
 }
