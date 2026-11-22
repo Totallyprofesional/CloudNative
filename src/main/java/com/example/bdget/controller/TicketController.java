@@ -48,10 +48,11 @@ public class TicketController {
     @GetMapping("/{id}/descargar")
     public ResponseEntity<ByteArrayResource> descargarTicket(@PathVariable Long id) {
         byte[] data = ticketService.descargarTicket(id);
+        String nombre = ticketService.obtenerNombreArchivo(id);
         return ResponseEntity.ok()
                 .contentLength(data.length)
                 .header("Content-Type", "application/octet-stream")
-                .header("Content-Disposition", "attachment; filename=\"ticket" + id + ".txt\"")
+                .header("Content-Disposition", "attachment; filename=\"" + nombre + "\"")
                 .body(new ByteArrayResource(data));
     }
 

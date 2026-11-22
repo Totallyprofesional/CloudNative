@@ -28,7 +28,7 @@ public class CompraServiceImpl implements CompraService {
         Evento evento = eventoRepository.findById(request.getEventoId())
                 .orElseThrow(() -> new RuntimeException(
                         "No existe el evento con id " + request.getEventoId()));
-                        
+
         Integer precioUnitario = evento.getPrecioEntrada();
         Integer total = precioUnitario * request.getCantidad();
 
@@ -38,7 +38,7 @@ public class CompraServiceImpl implements CompraService {
         compra.setPrecioUnitario(precioUnitario);
         compra.setTotal(total);
         compraRepository.save(compra);
-        
+
         CompraResponse response = new CompraResponse();
         response.setNombreEvento(evento.getNombre());
         response.setCantidad(request.getCantidad());
@@ -49,24 +49,31 @@ public class CompraServiceImpl implements CompraService {
 
     @Override
     public File generarResumen(Long compraId) {
-    Compra compra = compraRepository.findById(compraId)
-            .orElseThrow(() -> new RuntimeException(
-                    "No existe la compra con id " + compraId));
-    Evento evento = eventoRepository.findById(compra.getEventoId())                
-        .orElseThrow(() -> new RuntimeException(
-            "Id del evento no encontrado: " + compra.getEventoId()));
-    String contenido = "Resumen de Compra N° " + compra.getId() + "\n"
-        + "Evento: " + evento.getNombre() + "\n"
-        + "Cantidad de entradas: " + compra.getCantidad() + "\n"
-        + "Precio unitario: " + compra.getPrecioUnitario() + "\n"
-        + "Total: " + compra.getTotal() + "\n";
+        Compra compra = compraRepository.findById(compraId)
+                .orElseThrow(() -> new RuntimeException(
+                        "No existe la compra con id " + compraId));
+        Evento evento = eventoRepository.findById(compra.getEventoId())
+                .orElseThrow(() -> new RuntimeException(
+                        "Id del evento no encontrado: " + compra.getEventoId()));
+        String contenido = "Resumen de Compra N° " + compra.getId() + "\n"
+                + "Evento: " + evento.getNombre() + "\n"
+                + "Cantidad de entradas: " + compra.getCantidad() + "\n"
+                + "Precio unitario: " + compra.getPrecioUnitario() + "\n"
+                + "Total: " + compra.getTotal() + "\n";
 
-    File archivo = new File("resumen_" + compra.getId() + ".txt");
-    try {
-        Files.writeString(archivo.toPath(), contenido);
-    } catch (IOException e) {
-        throw new RuntimeException("No se pudo crear el archivo del resumen", e);
+        File archivo = new File("resumen_" + compra.getId() + ".txt");
+        try {
+            Files.writeString(archivo.toPath(), contenido);
+        } catch (IOException e) {
+            throw new RuntimeException("No se pudo crear el archivo del resumen", e);
+        }
+        return archivo;
     }
-    return archivo;
+
+    @Override
+    public Long obtenerEventoIdPorCompra(Long compraId) {
+        return compraRepository.findById(compraId)
+                .orElseThrow(() -> new RuntimeException("Compra no encontrada"))
+                .getEventoId();
     }
 }

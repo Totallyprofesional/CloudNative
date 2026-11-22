@@ -26,4 +26,7 @@ public interface TicketService {
 
     byte[] descargarTicket(Long ticketId);
 
+    String obtenerNombreArchivo(Long id);
+
+    String obtenerRutaS3(Long id);
 }

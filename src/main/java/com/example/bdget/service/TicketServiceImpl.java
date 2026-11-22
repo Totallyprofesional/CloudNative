@@ -141,9 +141,14 @@ public class TicketServiceImpl implements TicketService {
             throw new RuntimeException("No se pudo actualizar el ticket en el EFS", e);
         }
 
+        File archivo = rutaTicket(ticket).toFile();
+        if (!archivo.exists()) {
+            throw new RuntimeException("El ticket " + ticketId + " no existe en el EFS para actualizar");
+        }
+
         awsService.uploadFile(bucket,
                 "evento" + ticket.getEventoId() + "/" + ticket.getUsuario() + "/",
-                rutaTicket(ticket).toFile());
+                archivo);
 
         return toResponse(ticket, evento.getNombre());
     }
@@ -160,8 +165,7 @@ public class TicketServiceImpl implements TicketService {
             throw new RuntimeException("No se pudo eliminar el ticket del EFS", e);
         }
 
-        String key = "evento" + ticket.getEventoId() + "/" + ticket.getUsuario()
-                + "/ticket" + ticket.getId() + ".txt";
+        String key = obtenerRutaS3(ticketId);
         awsService.deleteObject(bucket, key);
 
         ticketRepository.delete(ticket);
@@ -169,13 +173,7 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public byte[] descargarTicket(Long ticketId) {
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException(
-                        "No existe el ticket con id " + ticketId));
-
-        String key = "evento" + ticket.getEventoId() + "/" + ticket.getUsuario()
-                + "/ticket" + ticket.getId() + ".txt";
-
+        String key = obtenerRutaS3(ticketId);
         try {
             return awsService.downloadFile(bucket, key);
         } catch (IOException e) {
@@ -216,5 +214,19 @@ public class TicketServiceImpl implements TicketService {
         response.setPrecioUnitario(ticket.getPrecioUnitario());
         response.setTotal(ticket.getTotal());
         return response;
+    }
+
+    @Override
+    public String obtenerNombreArchivo(Long id) {
+        ticketRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ticket no encontrado"));
+        return "ticket" + id + ".txt";
+    }
+
+    @Override
+    public String obtenerRutaS3(Long id) {
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ticket no encontrado"));
+        return "evento" + ticket.getEventoId() + "/" + ticket.getUsuario() + "/ticket" + id + ".txt";
     }
 }

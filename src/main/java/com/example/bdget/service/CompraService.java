@@ -8,4 +8,5 @@ import com.example.bdget.dto.CompraResponse;
 public interface CompraService {
     CompraResponse createCompra(CompraRequest request);   
     File generarResumen(Long compraId); 
+    Long obtenerEventoIdPorCompra(Long compraId);
 }
