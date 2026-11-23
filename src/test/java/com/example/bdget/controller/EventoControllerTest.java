@@ -14,6 +14,7 @@ import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -24,6 +25,7 @@ import com.example.bdget.service.EventoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(EventoController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class EventoControllerTest {
 
     @Autowired
@@ -66,20 +68,20 @@ class EventoControllerTest {
 
     @Test
     void testCreateEvento() throws Exception {
-    when(service.createEvento(any(Evento.class))).thenReturn(evento);
+        when(service.createEvento(any(Evento.class))).thenReturn(evento);
 
-    mockMvc.perform(post("/eventos")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsString(evento)))
-            .andExpect(status().isOk())
-            .andExpect(content().json(mapper.writeValueAsString(evento)));
-   }
+        mockMvc.perform(post("/eventos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(evento)))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(evento)));
+    }
 
-   @Test
+    @Test
     void testCreateEventoInvalido() throws Exception {
-    mockMvc.perform(post("/eventos")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{\"fecha\":\"2026-12-20\",\"precioEntrada\":15000}"))
-            .andExpect(status().isBadRequest());
-   }
+        mockMvc.perform(post("/eventos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"fecha\":\"2026-12-20\",\"precioEntrada\":15000}"))
+                .andExpect(status().isBadRequest());
+    }
 }
